@@ -1,8 +1,8 @@
 import boto3
 import json
-import os
 import logging
 from logdna import LogDNAHandler
+from config.settings.base import CURRENT_ENVIRONMENT
 
 
 
@@ -15,18 +15,13 @@ def load_credentials(secretid: str, region: str) -> dict:
     return credentials
 
 
-def set_logger(name: str, level=None, ingestion_key=None, env=None):
+def set_logger(name: str, level=None):
     credentials = load_credentials(
-        secretid="cb-squirrel-mailer-secrets", region="us-east-1"
+        secretid="cb-explorer-cl-secrets", region="us-east-1"
     )
-    if ingestion_key is None:
-        key = os.environ["LOGDNA_INGESTION_KEY"]
 
-    if level is None:
-        level = os.environ["LOG_LEVEL"]
-
-    if env is None:
-        env = os.environ["ENVIRONMENT"]
+    key = credentials["LOGDNA_INGESTION_KEY"]
+    level = credentials["LOG_LEVEL"]
 
     log = logging.getLogger(name)
 
@@ -34,12 +29,12 @@ def set_logger(name: str, level=None, ingestion_key=None, env=None):
         "index_meta": True,
         "hostname": "cb-messaging-api",
         "tags": ["cb-messaging-api"],
-        "env": env,
+        "env": CURRENT_ENVIRONMENT,
         "level": level.capitalize()
         if level is None
         else level.capitalize(),
     }
-    if os.environ["ENVIRONMENT"] != "TESTING":
-        log.addHandler(hdlr=LogDNAHandler(key, options))
+
+    log.addHandler(hdlr=LogDNAHandler(key, options))
 
     return log
