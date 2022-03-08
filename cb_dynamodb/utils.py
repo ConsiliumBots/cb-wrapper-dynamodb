@@ -21,7 +21,9 @@ def set_logger(name: str, level=None):
     )
 
     key = credentials["LOGDNA_INGESTION_KEY"]
-    level = credentials["LOG_LEVEL"]
+
+    if level is None:
+        level = credentials["LOG_LEVEL"]
 
     log = logging.getLogger(name)
 
