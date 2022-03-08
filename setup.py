@@ -8,7 +8,7 @@ setuptools.setup(
     install_requires=[
         "boto3",
     ],
-    version="0.0.3",
+    version="0.0.4",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
@@ -26,3 +26,5 @@ setuptools.setup(
 
 #0.0.1 -> Initial
 #0.0.2 -> Env var as optionals
+#0.0.3 -> Secrets manager
+#0.0.4 -> Fix en level
