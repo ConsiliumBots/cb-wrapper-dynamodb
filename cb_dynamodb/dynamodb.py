@@ -6,7 +6,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from cb_messaging_api.utils import set_logger
+from cb_dynamodb.utils import set_logger
 
 log = set_logger(name=__name__, level="debug")
 
@@ -245,9 +245,7 @@ class DynamoDB:
                     "table_name": table_name,
                     "country": self.country,
                     "error": error.response["Error"]["Code"],
-                    "status": error.response["ResponseMetadata"][
-                        "HTTPStatusCode"
-                    ],
+                    "status": error.response["ResponseMetadata"]["HTTPStatusCode"],
                 },
             )
             if error.response["Error"]["Code"] == "ResourceNotFoundException":
@@ -328,9 +326,7 @@ class DynamoDB:
 
             response = {}
             for secondary_index in secondary_indexes:
-                response[secondary_index["IndexName"]] = secondary_index[
-                    "KeySchema"
-                ]
+                response[secondary_index["IndexName"]] = secondary_index["KeySchema"]
             return response
         except Exception as error:
             log.error(
@@ -395,16 +391,12 @@ class DynamoDB:
                     "index": index,
                     "value": value,
                     "error": error.response["Error"]["Code"],
-                    "status": error.response["ResponseMetadata"][
-                        "HTTPStatusCode"
-                    ],
+                    "status": error.response["ResponseMetadata"]["HTTPStatusCode"],
                 },
             )
             if error.response["Error"]["Code"] == "ValidationException":
                 raise TypeError(error) from error
-            elif (
-                error.response["Error"]["Code"] == "ResourceNotFoundException"
-            ):
+            elif error.response["Error"]["Code"] == "ResourceNotFoundException":
                 raise FileNotFoundError from error
             else:
                 raise botocore.exceptions.ClientError
