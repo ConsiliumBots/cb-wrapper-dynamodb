@@ -15,12 +15,18 @@ def load_credentials(secretid: str, region: str) -> dict:
     return credentials
 
 
-def set_logger(name: str, level=None):
+def set_logger(name: str, level=None, ingestion_key=None, env=None):
     credentials = load_credentials(
         secretid="cb-squirrel-mailer-secrets", region="us-east-1"
     )
+    if ingestion_key is None:
+        key = os.environ["LOGDNA_INGESTION_KEY"]
 
-    key = os.environ["LOGDNA_INGESTION_KEY"]
+    if level is None:
+        level = os.environ["LOG_LEVEL"]
+
+    if env is None:
+        env = os.environ["ENVIRONMENT"]
 
     log = logging.getLogger(name)
 
@@ -28,8 +34,8 @@ def set_logger(name: str, level=None):
         "index_meta": True,
         "hostname": "cb-messaging-api",
         "tags": ["cb-messaging-api"],
-        "env": os.environ["ENVIRONMENT"],
-        "level": os.environ["LOG_LEVEL"].capitalize()
+        "env": env,
+        "level": level.capitalize()
         if level is None
         else level.capitalize(),
     }
