@@ -151,3 +151,5 @@ media/*
 .DS_Store
 scripts/INPUTS/*.csv*
 .idea
+cb_dynamodb/config/settings/secrets.json
+
