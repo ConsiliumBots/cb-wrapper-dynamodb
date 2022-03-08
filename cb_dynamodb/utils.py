@@ -5,6 +5,7 @@ import logging
 from logdna import LogDNAHandler
 
 
+
 def load_credentials(secretid: str, region: str) -> dict:
     """
     Loads authentication credentials from AWS secrets manager and returns them
@@ -19,7 +20,7 @@ def set_logger(name: str, level=None):
         secretid="cb-squirrel-mailer-secrets", region="us-east-1"
     )
 
-    key = credentials["LOGDNA_INGESTION_KEY"]
+    key = os.environ["LOGDNA_INGESTION_KEY"]
 
     log = logging.getLogger(name)
 
