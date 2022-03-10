@@ -66,6 +66,14 @@ class DynamoDB:
         else:
             self.country = country
 
+    def __repr__(self):
+        rep = f"Dynamo({self.table_name})"
+        return rep
+
+    def __str__(self):
+        str = f"{self.table_name}"
+        return str
+
     def format_message(
         self, dict_to_format: dict, type_of_action=None, timestamp=None
     ) -> tuple:
