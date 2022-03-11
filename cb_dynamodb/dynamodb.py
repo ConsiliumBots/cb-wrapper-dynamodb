@@ -6,7 +6,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from cb_dynamodb.utils import set_logger
+from utils import set_logger
 
 log = set_logger(name=__name__, level="debug")
 
@@ -165,6 +165,7 @@ class DynamoDB:
         :return: Returns a DynamoDB response
         :rtype: response
         """
+        print(message)
         try:
             message_uuid, formatted_message = self.format_message(
                 dict_to_format=message,
@@ -390,6 +391,17 @@ class DynamoDB:
             if response["Count"] == 0:
                 raise FileNotFoundError
             return self.unformat_message(response["Items"])
+        except botocore.exceptions.ParamValidationError as error:
+            log.error(
+                error,
+                {
+                    "index_meta": True,
+                    "table_name": self.table_name,
+                    "country": self.country,
+                    "error": error,
+                },
+            )
+            raise TypeError
         except botocore.exceptions.ClientError as error:
             log.error(
                 error,
