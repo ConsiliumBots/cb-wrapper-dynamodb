@@ -6,7 +6,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from utils import set_logger
+from cb_dynamodb.utils import set_logger
 
 log = set_logger(name=__name__, level="debug")
 
