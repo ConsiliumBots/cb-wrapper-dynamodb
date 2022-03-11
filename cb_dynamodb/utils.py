@@ -2,7 +2,10 @@ import boto3
 import json
 import logging
 from logdna import LogDNAHandler
-from config.settings.base import CURRENT_ENVIRONMENT
+try:
+    from config.settings.base import CURRENT_ENVIRONMENT
+except:
+    pass
 
 
 
@@ -24,6 +27,9 @@ def set_logger(name: str, level=None):
 
     if level is None:
         level = credentials["LOG_LEVEL"]
+
+    if not "CURRENT_ENVIRONMENT" in locals():
+        CURRENT_ENVIRONMENT = "LOCAL"
 
     log = logging.getLogger(name)
 
