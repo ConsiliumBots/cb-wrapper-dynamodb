@@ -165,7 +165,6 @@ class DynamoDB:
         :return: Returns a DynamoDB response
         :rtype: response
         """
-        print(message)
         try:
             message_uuid, formatted_message = self.format_message(
                 dict_to_format=message,
@@ -377,7 +376,17 @@ class DynamoDB:
                     KeyConditionExpression=f"{index} = :p",
                     ExpressionAttributeValues={":p": {"S": str(value)}},
                 )
+            if self.country is None:
+                response = self.client.query(
+                    TableName=self.table_name,
+                    IndexName=f"{index}-index",
+                    KeyConditionExpression=f"{index} = :p",
+                    ExpressionAttributeValues={
+                        ":p": {"S": str(value)}
+                    }
+                )
             else:
+                print(index)
                 response = self.client.query(
                     TableName=self.table_name,
                     IndexName=f"{index}-index",
