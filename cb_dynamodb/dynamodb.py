@@ -102,7 +102,11 @@ class DynamoDB:
                 },
             }
         else:
-            formatted_message = {}
+            formatted_message = {"timestamp": {
+                    "S": str(datetime.datetime.now())
+                    if timestamp is None
+                    else timestamp
+                }}
         try:
             for key in dict_to_format.keys():
                 formatted_message[key] = {}
@@ -155,22 +159,32 @@ class DynamoDB:
             )
         return unformatted_message
 
-    def post_message(self, message: dict, timestamp=None):
+    def post_message(self, message: dict, timestamp=None, include_message_id=True):
         """
         Post message to the DynamoDB table of the instanciated class
         :param message: Dictionary to be sent to a DynamoDB table
         :type message: dict
         :param timestamp: Date and time to be added to the message
         :type timestamp: Timestamp, optional (Default: current datetime)
+        :param include_message_id: True if you want to include a message_id into
+        dynamo db post. Default is True
+        :type include_message_id: Bool
         :return: Returns a DynamoDB response
         :rtype: response
         """
         try:
-            message_uuid, formatted_message = self.format_message(
-                dict_to_format=message,
-                type_of_action="put",
-                timestamp=timestamp,
-            )
+            if include_message_id:
+                message_uuid, formatted_message = self.format_message(
+                    dict_to_format=message,
+                    type_of_action="put",
+                    timestamp=timestamp,
+                )
+            else:
+                message_uuid, formatted_message = self.format_message(
+                    dict_to_format=message,
+                    timestamp=timestamp,
+                )
+
             response = self.client.put_item(
                 TableName=self.table_name,
                 Item=formatted_message,
