@@ -58,14 +58,9 @@ class DynamoDB:
         :param region_name: Name of the region
         :type region_name: str
         """
-        credentials = load_credentials(
-            secretid="cb-explorer-cl-secrets", region="us-east-1"
-        )
         self.client = boto3.client(
             "dynamodb",
             region_name=region_name,
-            aws_access_key_id=credentials["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=credentials["AWS_SECRET_ACCESS_KEY"],
         )
         self.dynamo_resource = boto3.resource("dynamodb")
         self.table_name = table_name
