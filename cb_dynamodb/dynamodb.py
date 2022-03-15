@@ -6,7 +6,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from cb_dynamodb.utils import set_logger
+from cb_dynamodb.utils import set_logger, load_credentials
 
 log = set_logger(name=__name__, level="debug")
 
@@ -58,7 +58,15 @@ class DynamoDB:
         :param region_name: Name of the region
         :type region_name: str
         """
-        self.client = boto3.client("dynamodb", region_name=region_name)
+        credentials = load_credentials(
+            secretid="cb-explorer-cl-secrets", region="us-east-1"
+        )
+        self.client = boto3.client(
+            "dynamodb",
+            region_name=region_name,
+            aws_access_key_id=credentials["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=credentials["AWS_SECRET_ACCESS_KEY"],
+        )
         self.dynamo_resource = boto3.resource("dynamodb")
         self.table_name = table_name
         if country == "newhaven":
@@ -102,11 +110,13 @@ class DynamoDB:
                 },
             }
         else:
-            formatted_message = {"timestamp": {
+            formatted_message = {
+                "timestamp": {
                     "S": str(datetime.datetime.now())
                     if timestamp is None
                     else timestamp
-                }}
+                }
+            }
         try:
             for key in dict_to_format.keys():
                 formatted_message[key] = {}
@@ -395,9 +405,7 @@ class DynamoDB:
                     TableName=self.table_name,
                     IndexName=f"{index}-index",
                     KeyConditionExpression=f"{index} = :p",
-                    ExpressionAttributeValues={
-                        ":p": {"S": str(value)}
-                    }
+                    ExpressionAttributeValues={":p": {"S": str(value)}},
                 )
             else:
                 print(index)
