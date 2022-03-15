@@ -2,11 +2,11 @@ import boto3
 import json
 import logging
 from logdna import LogDNAHandler
+
 try:
     from config.settings.base import CURRENT_ENVIRONMENT
 except:
     pass
-
 
 
 def load_credentials(secretid: str, region: str) -> dict:
@@ -38,9 +38,7 @@ def set_logger(name: str, level=None):
         "hostname": "cb-messaging-api",
         "tags": ["cb-messaging-api"],
         "env": CURRENT_ENVIRONMENT,
-        "level": level.capitalize()
-        if level is None
-        else level.capitalize(),
+        "level": level.capitalize() if level is None else level.capitalize(),
     }
 
     log.addHandler(hdlr=LogDNAHandler(key, options))
