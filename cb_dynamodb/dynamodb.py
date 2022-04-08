@@ -79,7 +79,7 @@ class DynamoDB:
         return str
 
     def format_message(
-        self, dict_to_format: dict, type_of_action=None, timestamp=None
+            self, dict_to_format: dict, type_of_action=None, timestamp=None
     ) -> tuple:
         """
         Returns a tuple with message_uuid and a formatted message ready to be
