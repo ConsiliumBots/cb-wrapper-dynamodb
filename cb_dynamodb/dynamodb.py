@@ -6,6 +6,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
+from boto3.dynamodb.conditions import Key
 from cb_dynamodb.utils import set_logger, load_credentials
 
 log = set_logger(name=__name__, level="debug")
@@ -248,6 +249,26 @@ class DynamoDB:
                 raise AttributeError from error
             else:
                 raise Exception
+
+    def get_column_count(self, index: str, value: str):
+        """
+        Returns the number of items of a table
+        :param table_name: Table name to be scan
+        :type table_name: str, optional (Default is tablename of the
+        instanciated class)
+        :return: A integer with the number of items of the table requested
+        :rtype: int
+        """
+        try:
+            table = self.dynamo_resource.Table(self.table_name)
+            query = table.query(
+                IndexName=f"{index}-index",
+                Select="COUNT",
+                KeyConditionExpression=Key(index).eq(value),
+            )
+            return query["ScannedCount"]
+        except:
+            pass
 
     def get_index_count(self, table_name=None) -> int:
         """
