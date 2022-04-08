@@ -32,3 +32,4 @@ setuptools.setup(
 # 0.1.0 -> Major update on functions
 # 0.1.1 -> AWS secrets added
 # 0.1.1 -> AWS secrets removed
+# 0.1.4 -> Method get_column_count
