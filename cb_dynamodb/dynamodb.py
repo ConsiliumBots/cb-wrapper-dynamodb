@@ -262,7 +262,7 @@ class DynamoDB:
         try:
             table = self.dynamo_resource.Table(self.table_name)
             query = table.query(
-                IndexName=f"{index}-index",
+                IndexName=f"{index}",
                 Select="COUNT",
                 KeyConditionExpression=Key(index).eq(value),
             )
