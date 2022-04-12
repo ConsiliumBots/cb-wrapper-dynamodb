@@ -446,7 +446,6 @@ class DynamoDB:
                     ExpressionAttributeValues={":p": {"S": str(value)}},
                 )
             else:
-                print(index)
                 response = self.client.query(
                     TableName=self.table_name,
                     IndexName=f"{index}-index",
