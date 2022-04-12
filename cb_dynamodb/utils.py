@@ -14,7 +14,9 @@ def load_credentials(secretid: str, region: str) -> dict:
     Loads authentication credentials from AWS secrets manager and returns them
     """
     client = boto3.client("secretsmanager", region_name=region)
-    credentials = json.loads(client.get_secret_value(SecretId=secretid)["SecretString"])
+    credentials = json.loads(
+        client.get_secret_value(SecretId=secretid)["SecretString"]
+    )
     return credentials
 
 
