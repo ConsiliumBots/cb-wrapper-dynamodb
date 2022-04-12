@@ -7,7 +7,15 @@ import botocore
 import botocore.exceptions
 import botocore.errorfactory
 from boto3.dynamodb.conditions import Key
-from cb_dynamodb.utils import set_logger, load_credentials
+from botocore.errorfactory import (
+    ClientError,
+    BaseClientExceptions,
+    ClientExceptionsFactory,
+)
+
+from cb_dynamodb.utils import set_logger
+
+from dataclasses import dataclass, field, InitVar
 
 log = set_logger(name=__name__, level="debug")
 
@@ -19,20 +27,27 @@ class DynamoDB:
     Attributes
     ----------
     table_name : str
-        a formatted string with DynamoDB table name to interact with
+        a formatted string with DynamoDB table name
+        to interact with
     country : str
-        a formatted string with the country name needed for search methods (default None)
+        a formatted string with the country name needed
+        for search methods (default None)
     region_name : str
-        a formatted string with AWS region name where table is located (default us-east-1)
+        a formatted string with AWS region name where
+        table is located (default us-east-1)
     Methods
     -------
-    format_message(self, dict_to_format: dict, type_of_action=None, timestamp=None)
-        Returns a tuple with message_uuid and a formatted message ready to be
+    format_message(self, dict_to_format: dict,
+    type_of_action=None, timestamp=None)
+        Returns a tuple with message_uuid and
+        a formatted message ready to be
         post to a dynamo db table
     unformat_message(self, to_unformat: list)
-        Unformat a message with DynamoDB format and returns a dictionary
+        Unformat a message with DynamoDB format
+        and returns a dictionary
     post_message(self, message: dict, timestamp=None):
-        Post message to the DynamoDB table of the instanciated class
+        Post message to the DynamoDB table of the
+        instanciated class
     get_all_messages_from_index(self, table_name=None)
         Returns all messages from a table
     get_index_count(self, table_name=None)
@@ -165,14 +180,17 @@ class DynamoDB:
             )
         return unformatted_message
 
-    def post_message(self, message: dict, timestamp=None, include_message_id=True):
+    def post_message(
+        self, message: dict, timestamp=None, include_message_id=True
+    ):
         """
         Post message to the DynamoDB table of the instanciated class
         :param message: Dictionary to be sent to a DynamoDB table
         :type message: dict
         :param timestamp: Date and time to be added to the message
         :type timestamp: Timestamp, optional (Default: current datetime)
-        :param include_message_id: True if you want to include a message_id into
+        :param include_message_id: True if you want to include a
+        message_id into
         dynamo db post. Default is True
         :type include_message_id: Bool
         :return: Returns a DynamoDB response
@@ -293,7 +311,9 @@ class DynamoDB:
                     "table_name": table_name,
                     "country": self.country,
                     "error": error.response["Error"]["Code"],
-                    "status": error.response["ResponseMetadata"]["HTTPStatusCode"],
+                    "status": error.response["ResponseMetadata"][
+                        "HTTPStatusCode"
+                    ],
                 },
             )
             if error.response["Error"]["Code"] == "ResourceNotFoundException":
@@ -374,7 +394,9 @@ class DynamoDB:
 
             response = {}
             for secondary_index in secondary_indexes:
-                response[secondary_index["IndexName"]] = secondary_index["KeySchema"]
+                response[secondary_index["IndexName"]] = secondary_index[
+                    "KeySchema"
+                ]
             return response
         except Exception as error:
             log.error(
@@ -424,7 +446,6 @@ class DynamoDB:
                     ExpressionAttributeValues={":p": {"S": str(value)}},
                 )
             else:
-                print(index)
                 response = self.client.query(
                     TableName=self.table_name,
                     IndexName=f"{index}-index",
@@ -458,12 +479,16 @@ class DynamoDB:
                     "index": index,
                     "value": value,
                     "error": error.response["Error"]["Code"],
-                    "status": error.response["ResponseMetadata"]["HTTPStatusCode"],
+                    "status": error.response["ResponseMetadata"][
+                        "HTTPStatusCode"
+                    ],
                 },
             )
             if error.response["Error"]["Code"] == "ValidationException":
                 raise TypeError(error) from error
-            elif error.response["Error"]["Code"] == "ResourceNotFoundException":
+            elif (
+                error.response["Error"]["Code"] == "ResourceNotFoundException"
+            ):
                 raise FileNotFoundError from error
             else:
                 raise botocore.exceptions.ClientError
@@ -523,3 +548,105 @@ class DynamoDB:
             start = finish
             finish = finish + step
             items_to_delete = []
+
+
+@dataclass
+class Dynamo:
+    """
+    Dynamo resource class representation
+    """
+
+    db = boto3.resource("dynamodb")
+    country: str = None
+    region_name: str = "us-east-1"
+
+
+class DynamoPost(Dynamo):
+    """
+    Post actions over Dynamo Table
+    """
+
+    @classmethod
+    def post_item(
+        cls,
+        table_name: str,
+        message: dict,
+    ):
+        """
+        Create a new item on the specified table
+        :param table_name: Table name
+        :type table_name: str
+        :param message: Information to post
+        :type message: dict
+        :return: True if the item was successfully created
+        :rtype: Bool
+        """
+        try:
+            table = cls.db.Table(f"{table_name}")
+            response = table.put_item(Item=message)
+            log.info(
+                f"Message {response['ResponseMetadata']['RequestId']} saved successfully "
+                f"on table {table}",
+                {
+                    "index_meta": True,
+                    "table_name": table,
+                    "country": cls.country,
+                    "message_uuid": 1,
+                },
+            )
+            return True
+        except botocore.errorfactory.ClientError as error:
+            log.error(
+                error,
+                {
+                    "index_meta": True,
+                    "table": table_name,
+                    "country": cls.country,
+                    "error_code": error.__dict__["response"][
+                        "ResponseMetadata"
+                    ]["HTTPStatusCode"],
+                    "message": error.__dict__["response"]["Error"]["Message"],
+                },
+            )
+            raise error
+
+        except Exception as error:
+            log.error(
+                error,
+                {
+                    "index_meta": True,
+                    "table": cls.table,
+                    "country": cls.table,
+                },
+            )
+            raise Exception
+
+
+class DynamoSearch(Dynamo):
+    """
+    Search actions over a dynamo table
+    """
+
+    @classmethod
+    def get_item(cls, table_name, key):
+        """
+        Obtains an item from the specified
+        table
+        :param table_name: Table name
+        :type table_name: str
+        :param key: Dictionary with the partition
+        key to search
+        :type key: Partition Key, Sort key (Optional)
+        :return: Object dictionary
+        :rtype: dict
+        """
+        try:
+            table = cls.db.Table(table_name)
+            response = table.get_item(Key=key)
+            item = response.get("Item")
+            if item is not None:
+                return item
+            else:
+                return f"{key} not found on table {table_name}"
+        except ClientError as e:
+            raise NotImplementedError
