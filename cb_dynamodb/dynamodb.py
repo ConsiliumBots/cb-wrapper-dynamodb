@@ -629,7 +629,7 @@ class DynamoPost(Dynamo):
                     "country": cls.country,
                 },
             )
-            raise Exception(error)
+            raise error
 
 
 class DynamoSearch(Dynamo):
