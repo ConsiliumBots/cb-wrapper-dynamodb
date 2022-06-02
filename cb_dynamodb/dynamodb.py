@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import uuid
 import math
 from ast import literal_eval
@@ -609,7 +610,16 @@ class DynamoPost(Dynamo):
                 },
             )
             raise error
-
+        except decimal.Inexact as error:
+            log.error(
+                f"decimal.Inexact: {error}. Trye ",
+                {
+                    "index_meta": True,
+                    "table": table_name,
+                    "country": cls.country,
+                },
+            )
+            raise Exception(error)
         except Exception as error:
             log.error(
                 error,
