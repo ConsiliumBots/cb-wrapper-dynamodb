@@ -615,11 +615,11 @@ class DynamoPost(Dynamo):
                 error,
                 {
                     "index_meta": True,
-                    "table": cls.table,
-                    "country": cls.table,
+                    "table": table_name,
+                    "country": cls.country,
                 },
             )
-            raise Exception
+            raise Exception(error)
 
 
 class DynamoSearch(Dynamo):
