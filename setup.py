@@ -8,7 +8,7 @@ setuptools.setup(
     install_requires=[
         "boto3",
     ],
-    version="0.2.0",
+    version="0.2.1",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
@@ -34,3 +34,4 @@ setuptools.setup(
 # 0.1.1 -> AWS secrets removed
 # 0.1.4 -> Method get_column_count
 # 0.2.0 -> Dynamo class refactor
+# 0.2.1 -> Error fixed
