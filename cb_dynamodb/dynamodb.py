@@ -226,6 +226,8 @@ class DynamoDB:
                 },
             )
             return response
+        except botocore.exceptions.ClientError as error:
+            raise FileNotFoundError(error)
         except Exception as error:
             log.error(
                 error,
