@@ -288,8 +288,8 @@ class DynamoDB:
                 KeyConditionExpression=Key(index).eq(value),
             )
             return query["ScannedCount"]
-        except:
-            pass
+        except ClientError as error:
+            raise SystemError(error)
 
     def get_index_count(self, table_name=None) -> int:
         """
