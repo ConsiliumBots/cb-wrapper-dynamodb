@@ -8,7 +8,7 @@ setuptools.setup(
     install_requires=[
         "boto3",
     ],
-    version="0.3.1",
+    version="0.4.1",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
@@ -36,3 +36,4 @@ setuptools.setup(
 # 0.2.0 -> Dynamo class refactor
 # 0.2.1 -> Error fixed
 # 0.3.1 -> NotFoundError handled
+# 0.4.1 -> Error handler for get_column_count method
