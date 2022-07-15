@@ -290,6 +290,8 @@ class DynamoDB:
             return query["ScannedCount"]
         except ClientError as error:
             raise SystemError(error)
+        except Exception as error:
+            raise Exception(error)
 
     def get_index_count(self, table_name=None) -> int:
         """
