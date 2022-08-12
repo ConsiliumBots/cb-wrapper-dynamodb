@@ -7,6 +7,7 @@ setuptools.setup(
     name="dynamodb",
     install_requires=[
         "boto3",
+        "logdna",
     ],
     version="0.4.2",
     author="Joaquin Grez",
