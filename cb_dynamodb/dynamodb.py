@@ -2,6 +2,7 @@ import datetime
 import decimal
 import uuid
 import math
+import warnings
 from ast import literal_eval
 import boto3
 import botocore
@@ -664,3 +665,37 @@ class DynamoSearch(Dynamo):
                 return f"{key} not found on table {table_name}"
         except ClientError as e:
             raise NotImplementedError
+
+    @classmethod
+    def get_column(cls, table_name, attr_name:str) -> dict:
+        """
+        Get values column of common attribute
+        for all items in specified table
+        :param table_name: Table name
+        :type table_name: str
+        :param attr_name: Name of attribute to get
+        :type attr_name: str
+        :return: List of dicts were keys are (primary_key_name, attr_name)
+        and values are the corresponding values of each item
+        :rtype: list
+        """
+        try:
+            table = cls.db.Table(table_name)
+            table_key = table.key_schema.pop()['AttributeName']
+            response = table.scan(
+                AttributesToGet=[table_key, attr_name]
+            )
+            response_items = response['Items']
+            len_items = [len(item) for item in response_items]
+            if max(len_items) == 1:
+                raise AttributeError(f"{table} object has no attribute '{attr_name}'")
+            elif min(len_items) == 1:
+                warnings.warn(f"some items are missing the '{attr_name}' attribute")
+            # Create dict with generic keys for further manipulation
+            for d in response_items:
+                d['key'] = d.pop(table_key)
+                d['attrval'] = d.pop(attr_name)
+        except ClientError:
+            raise NotImplementedError
+        else:
+            return response_items
