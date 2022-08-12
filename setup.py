@@ -9,7 +9,7 @@ setuptools.setup(
         "boto3",
         "logdna",
     ],
-    version="0.4.2",
+    version="0.5.0",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
@@ -39,3 +39,4 @@ setuptools.setup(
 # 0.3.1 -> NotFoundError handled
 # 0.4.1 -> Error handler for get_column_count method
 # 0.4.2 -> str index added
+# 0.5.0 -> get_column method added
