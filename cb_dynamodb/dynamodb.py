@@ -667,7 +667,7 @@ class DynamoSearch(Dynamo):
             raise NotImplementedError
 
     @classmethod
-    def get_column(cls, table_name, attr_name:str) -> dict:
+    def get_column(cls, table_name:str, attr_name:str) -> list:
         """
         Get values column of common attribute
         for all items in specified table
@@ -691,10 +691,6 @@ class DynamoSearch(Dynamo):
                 raise AttributeError(f"{table} object has no attribute '{attr_name}'")
             elif min(len_items) == 1:
                 warnings.warn(f"some items are missing the '{attr_name}' attribute")
-            # Create dict with generic keys for further manipulation
-            for d in response_items:
-                d['key'] = d.pop(table_key)
-                d['attrval'] = d.pop(attr_name)
         except ClientError:
             raise NotImplementedError
         else:
