@@ -8,7 +8,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from botocore.errorfactory import (
     ClientError,
     BaseClientExceptions,
@@ -667,7 +667,7 @@ class DynamoSearch(Dynamo):
             raise NotImplementedError
 
     @classmethod
-    def get_column(cls, table_name, attr_name:str) -> dict:
+    def get_column(cls, table_name:str, attr_name:str, filter_dict:dict=None) -> list:
         """
         Get values column of common attribute
         for all items in specified table
@@ -675,6 +675,8 @@ class DynamoSearch(Dynamo):
         :type table_name: str
         :param attr_name: Name of attribute to get
         :type attr_name: str
+        :param filter_dict: Optional filter dictionary
+        :type filter_dict: dict
         :return: List of dicts were keys are (primary_key_name, attr_name)
         and values are the corresponding values of each item
         :rtype: list
@@ -682,19 +684,23 @@ class DynamoSearch(Dynamo):
         try:
             table = cls.db.Table(table_name)
             table_key = table.key_schema.pop()['AttributeName']
-            response = table.scan(
-                AttributesToGet=[table_key, attr_name]
-            )
+            if filter_dict:
+                filter_attr_name = list(filter_dict.keys())[0]
+                filter_attr_value = list(filter_dict.values())[0]
+                response = table.scan(
+                    ProjectionExpression = f'{table_key}, {attr_name}',
+                    FilterExpression=Attr(filter_attr_name).eq(filter_attr_value)
+                )
+            else:
+                response = table.scan(
+                    ProjectionExpression = f'{table_key}, {attr_name}'
+                )
             response_items = response['Items']
             len_items = [len(item) for item in response_items]
             if max(len_items) == 1:
                 raise AttributeError(f"{table} object has no attribute '{attr_name}'")
             elif min(len_items) == 1:
                 warnings.warn(f"some items are missing the '{attr_name}' attribute")
-            # Create dict with generic keys for further manipulation
-            for d in response_items:
-                d['key'] = d.pop(table_key)
-                d['attrval'] = d.pop(attr_name)
         except ClientError:
             raise NotImplementedError
         else:
