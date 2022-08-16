@@ -2,6 +2,7 @@ import datetime
 import decimal
 import uuid
 import math
+from typing import Union
 import warnings
 from ast import literal_eval
 import boto3
@@ -643,20 +644,24 @@ class DynamoSearch(Dynamo):
     """
 
     @classmethod
-    def get_item(cls, table_name, key):
+    def get_item(cls, table_name:str, key:Union[dict, str]) -> dict:
         """
         Obtains an item from the specified
         table
         :param table_name: Table name
         :type table_name: str
         :param key: Dictionary with the partition
-        key to search
-        :type key: Partition Key, Sort key (Optional)
+        key to search; if string, then it represents
+        partition key value
+        :type key: dict with Partition Key, Sort key (Optional),
+        or string with partition key value
         :return: Object dictionary
         :rtype: dict
         """
         try:
             table = cls.db.Table(table_name)
+            if isinstance(key, str):
+                key = {table.key_schema.pop()['AttributeName']: key}
             response = table.get_item(Key=key)
             item = response.get("Item")
             if item is not None:
