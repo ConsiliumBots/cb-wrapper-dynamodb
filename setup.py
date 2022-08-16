@@ -9,7 +9,7 @@ setuptools.setup(
         "boto3",
         "logdna",
     ],
-    version="0.5.2",
+    version="0.5.3",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
