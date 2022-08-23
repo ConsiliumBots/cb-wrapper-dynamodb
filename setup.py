@@ -9,7 +9,7 @@ setuptools.setup(
         "boto3",
         "logdna",
     ],
-    version="0.5.3",
+    version="0.5.4",
     author="Joaquin Grez",
     author_email="joaquingrez@consiliumbots.com",
     description=("Thin wrapper for DynamoDB's API"),
@@ -40,3 +40,7 @@ setuptools.setup(
 # 0.4.1 -> Error handler for get_column_count method
 # 0.4.2 -> str index added
 # 0.5.0 -> get_column method added
+# 0.5.1 -> get_column: return explicit attribute names
+# 0.5.2 -> get_column: add option to filter results
+# 0.5.3 -> get_item: allow str in key argument with value for item
+# 0.5.4 -> handle large responses in scan operations
