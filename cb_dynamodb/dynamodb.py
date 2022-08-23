@@ -696,12 +696,29 @@ class DynamoSearch(Dynamo):
                     ProjectionExpression = f'{table_key}, {attr_name}',
                     FilterExpression=Attr(filter_attr_name).eq(filter_attr_value)
                 )
+                data = response['Items']
+                # Handle large responses (DDB limits scan to 1mb)
+                while response.get('LastEvaluatedKey'):
+                    response = table.scan(
+                        ProjectionExpression = f'{table_key}, {attr_name}',
+                        FilterExpression=Attr(filter_attr_name).eq(filter_attr_value),
+                        ExclusiveStartKey=response['LastEvaluatedKey']
+                    )
+                    data.extend(response['Items'])
             else:
                 response = table.scan(
                     ProjectionExpression = f'{table_key}, {attr_name}'
                 )
-            response_items = response['Items']
-            len_items = [len(item) for item in response_items]
+                data = response['Items']
+                # Handle large responses (DDB limits scan to 1mb)
+                while response.get('LastEvaluatedKey'):
+                    response = table.scan(
+                        ProjectionExpression = f'{table_key}, {attr_name}',
+                        ExclusiveStartKey=response['LastEvaluatedKey']
+                    )
+                    data.extend(response['Items'])
+            # Check length of response
+            len_items = [len(item) for item in data]
             if max(len_items) == 1:
                 raise AttributeError(f"{table} object has no attribute '{attr_name}'")
             elif min(len_items) == 1:
@@ -709,4 +726,4 @@ class DynamoSearch(Dynamo):
         except ClientError:
             raise NotImplementedError
         else:
-            return response_items
+            return data
