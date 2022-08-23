@@ -719,7 +719,9 @@ class DynamoSearch(Dynamo):
                     data.extend(response['Items'])
             # Check length of response
             len_items = [len(item) for item in data]
-            if max(len_items) == 1:
+            if len(len_items) == 0:
+                raise AttributeError(f"{table} contains no items that match these criteria")
+            elif max(len_items) == 1:
                 raise AttributeError(f"{table} object has no attribute '{attr_name}'")
             elif min(len_items) == 1:
                 warnings.warn(f"some items are missing the '{attr_name}' attribute")
