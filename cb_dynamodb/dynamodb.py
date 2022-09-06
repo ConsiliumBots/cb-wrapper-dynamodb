@@ -664,10 +664,9 @@ class DynamoSearch(Dynamo):
                 key = {table.key_schema.pop()['AttributeName']: key}
             response = table.get_item(Key=key)
             item = response.get("Item")
-            if item is not None:
-                return item
-            else:
-                return f"{key} not found on table {table_name}"
+            if item is None:
+                print(f"{key} not found on table {table_name}")
+            return item
         except ClientError as e:
             raise NotImplementedError
 
