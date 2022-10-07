@@ -1,5 +1,6 @@
 import datetime
 import decimal
+from functools import reduce
 import uuid
 import math
 from typing import Union
@@ -9,7 +10,7 @@ import boto3
 import botocore
 import botocore.exceptions
 import botocore.errorfactory
-from boto3.dynamodb.conditions import Key, Attr
+from boto3.dynamodb.conditions import Key, Attr, And
 from botocore.errorfactory import (
     ClientError,
     BaseClientExceptions,
@@ -671,7 +672,7 @@ class DynamoSearch(Dynamo):
             raise NotImplementedError
 
     @classmethod
-    def get_column(cls, table_name:str, attr_name:str, filter_dict:dict=None) -> list:
+    def get_column(cls, table_name:str, attr_name:str, filters:dict=None) -> list:
         """
         Get values column of common attribute
         for all items in specified table
@@ -679,8 +680,8 @@ class DynamoSearch(Dynamo):
         :type table_name: str
         :param attr_name: Name of attribute to get
         :type attr_name: str
-        :param filter_dict: Optional filter dictionary
-        :type filter_dict: dict
+        :param filters: Optional filter dictionary
+        :type filters: dict
         :return: List of dicts were keys are (primary_key_name, attr_name)
         and values are the corresponding values of each item
         :rtype: list
@@ -688,19 +689,17 @@ class DynamoSearch(Dynamo):
         try:
             table = cls.db.Table(table_name)
             table_key = table.key_schema.pop()['AttributeName']
-            if filter_dict:
-                filter_attr_name = list(filter_dict.keys())[0]
-                filter_attr_value = list(filter_dict.values())[0]
+            if filters:
                 response = table.scan(
                     ProjectionExpression = f'{table_key}, {attr_name}',
-                    FilterExpression=Attr(filter_attr_name).eq(filter_attr_value)
+                    FilterExpression=reduce(And, ([Key(k).eq(v) for k, v in filters.items()]))
                 )
                 data = response['Items']
                 # Handle large responses (DDB limits scan to 1mb)
                 while response.get('LastEvaluatedKey'):
                     response = table.scan(
                         ProjectionExpression = f'{table_key}, {attr_name}',
-                        FilterExpression=Attr(filter_attr_name).eq(filter_attr_value),
+                        FilterExpression=reduce(And, ([Key(k).eq(v) for k, v in filters.items()])),
                         ExclusiveStartKey=response['LastEvaluatedKey']
                     )
                     data.extend(response['Items'])
