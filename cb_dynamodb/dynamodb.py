@@ -242,21 +242,24 @@ class DynamoDB:
             )
             raise Exception
 
-    def get_all_messages_from_index(self, table_name=None) -> list:
+    def get_all_messages_from_index(self, table_name=None, start_key=None) -> list:
         """
         Returns all messages from a table
         :param table_name: Table name to be scan
         :type table_name: str, optional (Default is tablename of the
         instanciated class)
+        :param start_key: Key from which to start the scan.
+        :type start_key: dict, optional (Default is None)
         :return: A list with all the elements of the table requested
         :rtype: list
         """
         try:
-            if table_name is None:
-                response = self.client.scan(TableName=self.table_name)
-            else:
-                response = self.client.scan(TableName=table_name)
+            table_name = table_name if table_name is not None else self.table_name
 
+            if not start_key:
+                response = self.client.scan(TableName=table_name)
+            else:
+                response = self.client.scan(TableName=table_name, ExclusiveStartKey=start_key)
             return self.unformat_message(response["Items"])
         except Exception as error:
             log.error(
