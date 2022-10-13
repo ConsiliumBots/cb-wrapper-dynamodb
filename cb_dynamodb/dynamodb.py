@@ -11,6 +11,7 @@ import botocore
 import botocore.exceptions
 import botocore.errorfactory
 from boto3.dynamodb.conditions import Key, Attr, And
+from boto3.dynamodb.types import TypeDeserializer
 from botocore.errorfactory import (
     ClientError,
     BaseClientExceptions,
@@ -159,12 +160,11 @@ class DynamoDB:
         :rtype: list
         """
         try:
-            unformatted_message = []
-            for item in to_unformat:
-                aux = {}
-                for key in item:
-                    aux[key] = item[key]["S"]
-                unformatted_message.append(aux)
+            td = TypeDeserializer()
+            unformatted_message = [
+                {k: td.deserialize(v) for k, v in item.items()}
+                for item in to_unformat
+            ]
         except (AttributeError, TypeError) as error:
             log.error(
                 error,
