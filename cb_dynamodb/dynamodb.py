@@ -165,6 +165,7 @@ class DynamoDB:
                 {k: td.deserialize(v) for k, v in item.items()}
                 for item in to_unformat
             ]
+            return unformatted_message
         except (AttributeError, TypeError) as error:
             log.error(
                 error,
@@ -182,7 +183,6 @@ class DynamoDB:
                     "country": self.country,
                 },
             )
-        return unformatted_message
 
     def post_message(
         self, message: dict, timestamp=None, include_message_id=True
