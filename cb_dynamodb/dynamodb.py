@@ -53,7 +53,7 @@ class DynamoDB:
     post_message(self, message: dict, timestamp=None):
         Post message to the DynamoDB table of the
         instanciated class
-    get_all_messages_from_index(self, table_name=None)
+    get_all_messages_from_index(self, table_name=None, start_key=None, return_index=False)
         Returns all messages from a table
     get_index_count(self, table_name=None)
         Returns the number of items of a table
@@ -242,7 +242,9 @@ class DynamoDB:
             )
             raise Exception
 
-    def get_all_messages_from_index(self, table_name=None, start_key=None) -> list:
+    def get_all_messages_from_index(
+        self, table_name=None, start_key=None, return_index=False
+    ) -> Union[tuple, list]:
         """
         Returns all messages from a table
         :param table_name: Table name to be scan
@@ -250,8 +252,13 @@ class DynamoDB:
         instanciated class)
         :param start_key: Key from which to start the scan.
         :type start_key: dict, optional (Default is None)
-        :return: A list with all the elements of the table requested
-        :rtype: list
+        :param return_index: Whether to return the last scanned index or not.
+        :type return_index: bool, optional (Default is False)
+        :return: A tuple containing a list with all the retrieved elements of
+        the table and a object index to paginate results or just the list
+        depending on `return_index`. If index is None, all the results were
+        scanned.
+        :rtype: tuple or list
         """
         try:
             table_name = table_name if table_name is not None else self.table_name
@@ -259,8 +266,16 @@ class DynamoDB:
             if not start_key:
                 response = self.client.scan(TableName=table_name)
             else:
-                response = self.client.scan(TableName=table_name, ExclusiveStartKey=start_key)
-            return self.unformat_message(response["Items"])
+                response = self.client.scan(
+                    TableName=table_name, ExclusiveStartKey=start_key
+                )
+            unformatted_message = self.unformat_message(response["Items"])
+
+            if return_index:
+                last_evaluated_key = response.get("LastEvaluatedKey")
+                return unformatted_message, last_evaluated_key
+            return unformatted_message
+
         except Exception as error:
             log.error(
                 error,
