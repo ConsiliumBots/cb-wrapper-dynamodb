@@ -11,6 +11,7 @@ import botocore
 import botocore.exceptions
 import botocore.errorfactory
 from boto3.dynamodb.conditions import Key, Attr, And
+from boto3.dynamodb.types import TypeDeserializer
 from botocore.errorfactory import (
     ClientError,
     BaseClientExceptions,
@@ -52,7 +53,7 @@ class DynamoDB:
     post_message(self, message: dict, timestamp=None):
         Post message to the DynamoDB table of the
         instanciated class
-    get_all_messages_from_index(self, table_name=None)
+    get_all_messages_from_index(self, table_name=None, start_key=None, return_index=False)
         Returns all messages from a table
     get_index_count(self, table_name=None)
         Returns the number of items of a table
@@ -159,12 +160,12 @@ class DynamoDB:
         :rtype: list
         """
         try:
-            unformatted_message = []
-            for item in to_unformat:
-                aux = {}
-                for key in item:
-                    aux[key] = item[key]["S"]
-                unformatted_message.append(aux)
+            td = TypeDeserializer()
+            unformatted_message = [
+                {k: td.deserialize(v) for k, v in item.items()}
+                for item in to_unformat
+            ]
+            return unformatted_message
         except (AttributeError, TypeError) as error:
             log.error(
                 error,
@@ -182,7 +183,6 @@ class DynamoDB:
                     "country": self.country,
                 },
             )
-        return unformatted_message
 
     def post_message(
         self, message: dict, timestamp=None, include_message_id=True
@@ -242,22 +242,40 @@ class DynamoDB:
             )
             raise Exception
 
-    def get_all_messages_from_index(self, table_name=None) -> list:
+    def get_all_messages_from_index(
+        self, table_name=None, start_key=None, return_index=False
+    ) -> Union[tuple, list]:
         """
         Returns all messages from a table
         :param table_name: Table name to be scan
         :type table_name: str, optional (Default is tablename of the
         instanciated class)
-        :return: A list with all the elements of the table requested
-        :rtype: list
+        :param start_key: Key from which to start the scan.
+        :type start_key: dict, optional (Default is None)
+        :param return_index: Whether to return the last scanned index or not.
+        :type return_index: bool, optional (Default is False)
+        :return: A tuple containing a list with all the retrieved elements of
+        the table and a object index to paginate results or just the list
+        depending on `return_index`. If index is None, all the results were
+        scanned.
+        :rtype: tuple or list
         """
         try:
-            if table_name is None:
-                response = self.client.scan(TableName=self.table_name)
-            else:
-                response = self.client.scan(TableName=table_name)
+            table_name = table_name if table_name is not None else self.table_name
 
-            return self.unformat_message(response["Items"])
+            if not start_key:
+                response = self.client.scan(TableName=table_name)
+            else:
+                response = self.client.scan(
+                    TableName=table_name, ExclusiveStartKey=start_key
+                )
+            unformatted_message = self.unformat_message(response["Items"])
+
+            if return_index:
+                last_evaluated_key = response.get("LastEvaluatedKey")
+                return unformatted_message, last_evaluated_key
+            return unformatted_message
+
         except Exception as error:
             log.error(
                 error,
